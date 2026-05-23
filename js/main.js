@@ -35,7 +35,7 @@ const initialEnemies = [
   { x: 1710, y: GROUND_Y - 32, w: 36, h: 32, left: 1520, right: 1840, speed: 0.9 },
 ];
 
-const goal = { x: 2200, y: GROUND_Y - 122, w: 34, h: 122 };
+const goal = { x: 2200, y: GROUND_Y - 122, w: 82, h: 122 };
 
 let state = "start";
 let lastTime = 0;
@@ -56,6 +56,7 @@ function resetPlayer() {
     vy: 0,
     onGround: false,
     facing: 1,
+    previousBottom: GROUND_Y,
   };
   cameraX = 0;
 }
@@ -131,6 +132,7 @@ function updatePlayer(dt) {
   const acceleration = 0.85 * dt;
   const friction = player.onGround ? 0.82 : 0.94;
   const maxSpeed = 6.2;
+  player.previousBottom = player.y + player.h;
 
   if (left) {
     player.vx -= acceleration;
@@ -141,7 +143,7 @@ function updatePlayer(dt) {
     player.facing = 1;
   }
   if (!left && !right) {
-    player.vx *= friction;
+    player.vx *= Math.pow(friction, dt);
   }
 
   player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
@@ -213,8 +215,7 @@ function resolveEnemyCollisions() {
       continue;
     }
 
-    const playerBottomBefore = player.y + player.h - player.vy;
-    const stomped = player.vy > 0 && playerBottomBefore <= enemy.y + 10;
+    const stomped = player.vy > 0 && player.previousBottom <= enemy.y + 10;
 
     if (stomped) {
       enemy.alive = false;
@@ -402,11 +403,11 @@ function drawGoal() {
   ctx.fillStyle = "#1b4f9a";
   ctx.fillRect(goal.x, goal.y, 10, goal.h);
   ctx.fillStyle = "#f5c84c";
-  ctx.fillRect(goal.x + 10, goal.y + 4, 72, 42);
+  ctx.fillRect(goal.x + 10, goal.y + 4, goal.w - 10, 42);
   ctx.fillStyle = "#111923";
   ctx.font = "20px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("漢", goal.x + 46, goal.y + 32);
+  ctx.fillText("漢", goal.x + goal.w / 2 + 5, goal.y + 32);
 }
 
 function drawHud() {
